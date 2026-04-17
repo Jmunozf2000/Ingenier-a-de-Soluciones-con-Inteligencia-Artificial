@@ -1,0 +1,25 @@
+FAA Advisory Circular AC 43.13-1B - Acceptable Methods, Techniques, and Practices
+Aircraft Inspection and Repair - Chapter 11: Aircraft Electrical Systems
+
+Section 11-113: Wire Splicing Requirements
+Wire splices in aircraft wiring must maintain the original electrical characteristics of the circuit.
+Splices shall not be used in locations subject to continuous movement or flexing.
+Each splice must be mechanically secure before soldering or crimping.
+Use only approved splicing connectors or terminals that match the wire gauge (AWG).
+The splice must restore the original insulation rating of the wire.
+A maximum of one splice per wire segment between termination points is recommended.
+Splices must be accessible for inspection per maintenance requirements.
+
+Section 11-114: Crimping Requirements
+Crimping tools must be of the proper type and size for the terminal and wire gauge being used.
+The crimping tool M22520/2-01 with positioner M22520/2-09 is approved for AWG 20 wire.
+After crimping, perform a pull test: minimum 40 lb pull force for AWG 20 terminals.
+Terminal type MS20659-225 is approved for use with AWG 20 wire.
+Inspect the crimp for cracks, splits, or improper deformation before installation.
+
+Section 11-115: Wire Identification and Protection
+All wire must be identified per the aircraft wiring diagram.
+Wire bundles must be properly supported and protected from chafing.
+Minimum bend radius for wire bundles is 10 times the bundle diameter.
+Source: FAA AC 43.13-1B | Chapter 11 | FAA, 1998 (with revisions)
+URL: https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/99861
