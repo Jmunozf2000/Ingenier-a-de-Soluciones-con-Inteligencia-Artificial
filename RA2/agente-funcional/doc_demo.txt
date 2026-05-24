@@ -1,0 +1,184 @@
+# ============================================================
+# Orquestador Jerarquico (CrewAI) - Planificador de Mantenimiento
+# Taller de Avionica LATAM Airlines
+# ISY0101 - Ingenieria de Soluciones con IA - Evaluacion Parcial 2
+# ------------------------------------------------------------
+# Refuerza la PLANIFICACION y la ORQUESTACION (IE5, IE2) usando el
+# patron jerarquico visto en clase: un AGENTE MANAGER que planifica
+# y DELEGA a agentes especialistas (Process.hierarchical).
+#
+# Roles del equipo (Crew):
+#   - Manager de Mantenimiento (planificador, sin herramientas, delega)
+#   - Especialista Documental  (consulta requisitos / RAG)
+#   - Ingeniero Validador       (valida calibres y torques / razonamiento)
+#   - Redactor Tecnico          (genera el plan/checklist final / escritura)
+#
+# NOTA: requiere credenciales del modelo (GITHUB_TOKEN / OPENAI_BASE_URL)
+# para ejecutarse. La definicion del equipo es independiente del LLM y
+# puede inspeccionarse sin credenciales (ver bloque __main__ / modo dry-run).
+# ============================================================
+
+import os
+from dotenv import load_dotenv
+from crewai import Agent, Task, Crew, Process, LLM
+
+import herramientas
+from herramientas import (
+    consulta_requisitos_mantenimiento,
+    validar_parametro_tecnico,
+    generar_plan_mantenimiento,
+)
+
+load_dotenv()
+
+
+# ------------------------------------------------------------
+# Configuracion del LLM para CrewAI (GitHub Models / gpt-4o-mini)
+# ------------------------------------------------------------
+def crear_llm():
+    return LLM(
+        model="openai/gpt-4o-mini",
+        base_url=os.getenv("OPENAI_BASE_URL"),
+        api_key=os.getenv("GITHUB_TOKEN"),
+        temperature=0,
+    )
+
+
+# ------------------------------------------------------------
+# Definicion del equipo de agentes (Crew)
+# ------------------------------------------------------------
+def construir_crew(retriever=None):
+    """Construye el Crew jerarquico. Si se pasa un retriever, se inyecta
+    en la herramienta de consulta para habilitar el RAG."""
+    if retriever is not None:
+        herramientas.set_retriever(retriever)
+
+    llm = crear_llm()
+
+    # --- MANAGER: planifica y delega. SIN herramientas propias. ---
+    manager = Agent(
+        role="Manager de Mantenimiento",
+        goal=("Descomponer la orden de mantenimiento en subtareas priorizadas "
+              "y delegar cada una al especialista adecuado, integrando los "
+              "resultados en un plan coherente y seguro."),
+        backstory=("Eres un jefe de taller de avionica con 20 anios de experiencia. "
+                   "No ejecutas tareas tecnicas: planificas, priorizas (seguridad "
+                   "primero) y coordinas a tu equipo de especialistas."),
+        llm=llm,
+        allow_delegation=True,   # clave del patron jerarquico
+        verbose=True,
+    )
+
+    # --- ESPECIALISTA DOCUMENTAL: consulta requisitos (RAG) ---
+    documental = Agent(
+        role="Especialista Documental",
+        goal="Encontrar y citar los requisitos tecnicos de cada subtarea en la documentacion.",
+        backstory=("Dominas las normas FAA/EASA y los manuales OEM. Siempre "
+                   "respaldas tus respuestas con la fuente documental."),
+        tools=[consulta_requisitos_mantenimiento],
+        llm=llm,
+        allow_delegation=False,
+        verbose=True,
+    )
+
+    # --- INGENIERO VALIDADOR: razona sobre parametros tecnicos ---
+    validador = Agent(
+        role="Ingeniero Validador",
+        goal="Validar que calibres y torques cumplan los rangos seguros antes de aprobar una subtarea.",
+        backstory=("Eres ingeniero de confiabilidad. Ninguna cifra pasa sin "
+                   "verificarse contra la tabla de referencia."),
+        tools=[validar_parametro_tecnico],
+        llm=llm,
+        allow_delegation=False,
+        verbose=True,
+    )
+
+    # --- REDACTOR TECNICO: genera el plan/checklist final ---
+    redactor = Agent(
+        role="Redactor Tecnico",
+        goal="Redactar y emitir el plan de mantenimiento final con subtareas priorizadas y respaldo.",
+        backstory=("Conviertes el trabajo del equipo en una orden de trabajo "
+                   "clara, trazable y lista para ejecutar."),
+        tools=[generar_plan_mantenimiento],
+        llm=llm,
+        allow_delegation=False,
+        verbose=True,
+    )
+
+    # --- TAREA DE ALTO NIVEL: se entrega al manager para que orqueste ---
+    tarea = Task(
+        description=(
+            "Planifica el mantenimiento solicitado: '{orden}'.\n"
+            "1. Descomponlo en subtareas y priorizalas (seguridad > inspeccion > "
+            "ajuste > registro).\n"
+            "2. Delega al Especialista Documental la consulta de requisitos.\n"
+            "3. Delega al Ingeniero Validador la verificacion de calibres/torques.\n"
+            "4. Delega al Redactor Tecnico la emision del plan final.\n"
+            "Si algo no tiene respaldo o resulta NO APTO, marcalo y ajusta el plan."
+        ),
+        expected_output=(
+            "Un plan de mantenimiento con subtareas priorizadas, cada una con su "
+            "respaldo documental y validacion tecnica, y la confirmacion de que el "
+            "plan final fue generado."
+        ),
+        agent=manager,
+    )
+
+    # --- CREW JERARQUICO: el manager coordina a los trabajadores ---
+    crew = Crew(
+        agents=[documental, validador, redactor],
+        tasks=[tarea],
+        process=Process.hierarchical,   # orquestacion jerarquica
+        manager_agent=manager,
+        verbose=True,
+    )
+    return crew
+
+
+# ------------------------------------------------------------
+# Inspeccion del equipo SIN credenciales (dry-run)
+# ------------------------------------------------------------
+def describir_crew():
+    """Imprime la composicion del equipo sin ejecutar el LLM.
+    Util como evidencia de la arquitectura de orquestacion."""
+    print("=" * 60)
+    print("EQUIPO DE ORQUESTACION JERARQUICA (CrewAI)")
+    print("=" * 60)
+    print("Proceso: Process.hierarchical (manager planifica y delega)\n")
+    print("MANAGER (sin herramientas, allow_delegation=True):")
+    print("  - Manager de Mantenimiento -> planifica y prioriza\n")
+    print("ESPECIALISTAS (trabajadores):")
+    print("  1. Especialista Documental -> consulta_requisitos_mantenimiento (RAG)")
+    print("  2. Ingeniero Validador     -> validar_parametro_tecnico (razonamiento)")
+    print("  3. Redactor Tecnico        -> generar_plan_mantenimiento (escritura)")
+    print("\nFlujo: orden -> manager descompone/prioriza -> delega a especialistas")
+    print("       -> integra resultados -> plan final emitido")
+
+
+if __name__ == "__main__":
+    import sys
+
+    # Modo dry-run: inspecciona la arquitectura sin necesitar credenciales.
+    if "--dry-run" in sys.argv:
+        describir_crew()
+        sys.exit(0)
+
+    # Ejecucion real (requiere credenciales y un retriever).
+    from agente_funcional import construir_retriever
+
+    print("[1] Indexando documentacion...")
+    retriever = construir_retriever(["doc_demo.txt"])
+
+    print("[2] Construyendo Crew jerarquico...")
+    crew = construir_crew(retriever)
+
+    orden = ("Inspeccion de 100 horas del cableado del componente de avionica: "
+             "revisar empalmes, validar AWG 16 para 18 A y torque del "
+             "terminal_anillo_10 a 22 lb-in.")
+    print(f"[3] Ejecutando orquestacion para la orden:\n    {orden}\n")
+    resultado = crew.kickoff(inputs={"orden": orden})
+
+    print("\n" + "=" * 60)
+    print("RESULTADO DE LA ORQUESTACION:")
+    print("=" * 60)
+    print(resultado)

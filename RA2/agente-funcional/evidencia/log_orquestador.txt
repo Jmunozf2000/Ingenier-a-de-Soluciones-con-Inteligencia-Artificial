@@ -1,0 +1,19 @@
+USER_AGENT environment variable not set, consider setting it to identify your requests.
+[1] Indexando documentacion...
+[OK] Cargado: doc_demo.txt
+[OK] 15 chunks indexados
+[2] Construyendo Crew jerarquico...
+Traceback (most recent call last):
+  File "/workspaces/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial/RA2/agente-funcional/orquestador_crew.py", line 108, in <module>
+    crew = construir_crew(retriever)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial/RA2/agente-funcional/orquestador_crew.py", line 40, in construir_crew
+    documental = Agent(
+                 ^^^^^^
+  File "/usr/local/python/3.12.1/lib/python3.12/site-packages/pydantic/main.py", line 250, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Agent
+tools.0
+  Input should be a valid dictionary or instance of BaseTool [type=model_type, input_value=StructuredTool(name='cons...ento at 0x7ea82a7ff560>), input_type=StructuredTool]
+    For further information visit https://errors.pydantic.dev/2.12/v/model_type

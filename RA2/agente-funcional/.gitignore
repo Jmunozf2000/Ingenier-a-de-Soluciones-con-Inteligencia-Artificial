@@ -1,0 +1,10 @@
+# Entorno
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Artefactos generados en ejecucion
+chroma_db/
+planes_mantenimiento/
+memoria_largo_plazo.json

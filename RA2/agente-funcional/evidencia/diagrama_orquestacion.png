@@ -1,0 +1,158 @@
+# ============================================================
+# Herramientas del Agente Funcional - Planificador de Mantenimiento
+# Taller de Avionica LATAM Airlines
+# ISY0101 - Ingenieria de Soluciones con IA - Evaluacion Parcial 2
+# ------------------------------------------------------------
+# Caso de uso: PLANIFICADOR DE MANTENIMIENTO PROGRAMADO.
+# El agente recibe una orden de alto nivel, la descompone en
+# subtareas priorizadas y, para cada una, consulta requisitos,
+# valida parametros tecnicos y genera el plan/checklist (OT).
+#
+# Tres herramientas que el agente invoca de forma autonoma (IE1):
+#   1. consulta_requisitos_mantenimiento -> recuperacion semantica RAG (IE4)
+#   2. validar_parametro_tecnico         -> RAZONAMIENTO tecnico
+#   3. generar_plan_mantenimiento        -> ESCRITURA (checklist/OT)
+# ============================================================
+
+import os
+from datetime import datetime
+from langchain_core.tools import tool
+
+# Retriever RAG compartido, inyectado desde el agente principal.
+_RETRIEVER = None
+
+
+def set_retriever(retriever):
+    """Inyecta el retriever RAG (ChromaDB) construido en el agente principal."""
+    global _RETRIEVER
+    _RETRIEVER = retriever
+
+
+# ============================================================
+# HERRAMIENTA 1 - CONSULTA (recuperacion semantica de contexto / IE4)
+# ============================================================
+@tool
+def consulta_requisitos_mantenimiento(tarea: str) -> str:
+    """Busca en la documentacion tecnica los REQUISITOS de una tarea de
+    mantenimiento: intervalos, herramientas, pares de apriete (torque),
+    calibres, materiales y procedimientos. Usa esta herramienta para
+    fundamentar cada subtarea del plan con respaldo documental.
+
+    Args:
+        tarea: Descripcion de la subtarea de mantenimiento a consultar.
+    """
+    if _RETRIEVER is None:
+        return "[ERROR] El retriever no esta inicializado."
+
+    docs = _RETRIEVER.invoke(tarea)
+    if not docs:
+        return ("No se encontro documentacion que respalde esta tarea. "
+                "Verifique con su supervisor o la fuente oficial.")
+
+    fragmentos = []
+    for doc in docs:
+        fuente = doc.metadata.get("source", "Fuente desconocida")
+        pagina = doc.metadata.get("page", "s/p")
+        fragmentos.append(f"[Fuente: {fuente} | Pagina: {pagina}]\n{doc.page_content}")
+    return "\n\n---\n\n".join(fragmentos)
+
+
+# ============================================================
+# HERRAMIENTA 2 - RAZONAMIENTO (validacion de parametros tecnicos)
+# ============================================================
+# Tablas de referencia simplificadas (ref. AS50881 / practicas estandar).
+_TABLA_AWG = {20: 11.0, 18: 16.0, 16: 22.0, 14: 32.0, 12: 41.0, 10: 55.0, 8: 73.0, 6: 101.0}
+# Rangos de torque de referencia por tipo de terminal (en libra-pulgada, lb-in).
+_RANGO_TORQUE = {
+    "terminal_anillo_10": (20, 25),
+    "terminal_anillo_1/4": (50, 70),
+    "conector_circular": (15, 20),
+}
+
+
+@tool
+def validar_parametro_tecnico(tipo: str, valor: float, referencia: str = "") -> str:
+    """Valida un parametro tecnico de una subtarea de mantenimiento.
+    Soporta dos tipos de validacion:
+      - tipo='calibre': comprueba si un calibre AWG (valor) soporta la
+        corriente indicada en 'referencia' (en amperios).
+      - tipo='torque': comprueba si un valor de torque (lb-in) esta dentro
+        del rango del terminal indicado en 'referencia'.
+
+    Args:
+        tipo: 'calibre' o 'torque'.
+        valor: El valor a validar (AWG para calibre, lb-in para torque).
+        referencia: Para 'calibre' la corriente en A; para 'torque' el tipo de terminal.
+    """
+    tipo = tipo.lower().strip()
+
+    if tipo == "calibre":
+        awg = int(valor)
+        if awg not in _TABLA_AWG:
+            disp = ", ".join(str(k) for k in sorted(_TABLA_AWG))
+            return f"[ERROR] Calibre AWG {awg} no tabulado. Disponibles: {disp}."
+        capacidad = _TABLA_AWG[awg]
+        try:
+            corriente = float(referencia)
+        except (ValueError, TypeError):
+            return "[ERROR] Para 'calibre' indique la corriente (A) en 'referencia'."
+        if corriente <= capacidad:
+            margen = round((capacidad - corriente) / capacidad * 100, 1)
+            return f"[APTO] AWG {awg} soporta {capacidad} A para {corriente} A (margen {margen}%)."
+        return (f"[NO APTO] AWG {awg} soporta solo {capacidad} A, insuficiente para "
+                f"{corriente} A. Use un calibre menor (mas grueso).")
+
+    if tipo == "torque":
+        if referencia not in _RANGO_TORQUE:
+            disp = ", ".join(_RANGO_TORQUE)
+            return f"[ERROR] Terminal '{referencia}' no tabulado. Disponibles: {disp}."
+        minimo, maximo = _RANGO_TORQUE[referencia]
+        if minimo <= valor <= maximo:
+            return f"[APTO] Torque {valor} lb-in dentro del rango [{minimo}, {maximo}] para {referencia}."
+        return (f"[NO APTO] Torque {valor} lb-in fuera del rango [{minimo}, {maximo}] "
+                f"para {referencia}. Ajuste al rango especificado.")
+
+    return "[ERROR] tipo debe ser 'calibre' o 'torque'."
+
+
+# ============================================================
+# HERRAMIENTA 3 - ESCRITURA (genera el plan/checklist de mantenimiento)
+# ============================================================
+@tool
+def generar_plan_mantenimiento(titulo: str, subtareas_priorizadas: str, fuente: str) -> str:
+    """Genera y guarda un Plan de Mantenimiento (checklist/OT) en un archivo.
+    Usa esta herramienta al final, cuando ya descompusiste la orden en
+    subtareas priorizadas, las fundamentaste con documentacion y validaste
+    sus parametros tecnicos.
+
+    Args:
+        titulo: Titulo de la orden de mantenimiento.
+        subtareas_priorizadas: Lista ordenada de subtareas por prioridad (texto).
+        fuente: Cita(s) de la documentacion que respalda el plan.
+    """
+    carpeta = "planes_mantenimiento"
+    os.makedirs(carpeta, exist_ok=True)
+    plan_id = datetime.now().strftime("PLAN-%Y%m%d-%H%M%S")
+    contenido = (
+        f"=========================================\n"
+        f"PLAN DE MANTENIMIENTO {plan_id}\n"
+        f"Taller de Avionica - LATAM Airlines\n"
+        f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        f"=========================================\n\n"
+        f"ORDEN: {titulo}\n\n"
+        f"SUBTAREAS PRIORIZADAS:\n{subtareas_priorizadas}\n\n"
+        f"RESPALDO DOCUMENTAL:\n{fuente}\n"
+        f"=========================================\n"
+    )
+    ruta = os.path.join(carpeta, f"{plan_id}.txt")
+    with open(ruta, "w", encoding="utf-8") as f:
+        f.write(contenido)
+    return f"[OK] Plan de mantenimiento generado: {ruta}\n\n{contenido}"
+
+
+# Lista exportable de herramientas para el agente
+HERRAMIENTAS = [
+    consulta_requisitos_mantenimiento,
+    validar_parametro_tecnico,
+    generar_plan_mantenimiento,
+]

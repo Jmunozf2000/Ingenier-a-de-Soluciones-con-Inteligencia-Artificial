@@ -1,0 +1,148 @@
+USER_AGENT environment variable not set, consider setting it to identify your requests.
+/workspaces/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial/RA2/agente-funcional/memoria.py:13: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
+  return ConversationBufferWindowMemory(
+============================================================
+AGENTE FUNCIONAL - PLANIFICADOR DE MANTENIMIENTO
+Taller de Avionica - LATAM Airlines
+============================================================
+
+[CONTEXTO PREVIO]
+Antecedentes de planes previos:
+- [2026-05-23T23:28:45] Orden: Planifica la inspeccion de cableado del componente de avionica: revisar empalmes, validar que el cable AWG 16 soporte 18 A y confirmar el torque del terminal_anillo_10 a 22 lb-in.
+
+[1] Indexando documentacion tecnica...
+[OK] Cargado: doc_demo.txt
+[OK] 15 chunks indexados
+
+[2] Inicializando memoria de corto plazo...
+
+[3] Construyendo agente funcional...
+
+[ORDEN]: Planifica la inspeccion de cableado del componente de avionica: revisar empalmes, validar que el cable AWG 16 soporte 18 A y confirmar el torque del terminal_anillo_10 a 22 lb-in.
+
+
+
+[1m> Entering new AgentExecutor chain...[0m
+[32;1m[1;3m
+Invoking: `consulta_requisitos_mantenimiento` with `{'tarea': 'revisar empalmes de cableado en avionica'}`
+
+
+[0m[36;1m[1;3m[Fuente: doc_demo.txt | Pagina: s/p]
+print("[2] Construyendo Crew jerarquico...")
+    crew = construir_crew(retriever)
+
+    orden = ("Inspeccion de 100 horas del cableado del componente de avionica: "
+             "revisar empalmes, validar AWG 16 para 18 A y torque del "
+             "terminal_anillo_10 a 22 lb-in.")
+    print(f"[3] Ejecutando orquestacion para la orden:\n    {orden}\n")
+    resultado = crew.kickoff(inputs={"orden": orden})
+
+    print("\n" + "=" * 60)
+    print("RESULTADO DE LA ORQUESTACION:")
+    print("=" * 60)
+    print(resultado)
+
+---
+
+[Fuente: doc_demo.txt | Pagina: s/p]
+print("[2] Construyendo Crew jerarquico...")
+    crew = construir_crew(retriever)
+
+    orden = ("Inspeccion de 100 horas del cableado del componente de avionica: "
+             "revisar empalmes, validar AWG 16 para 18 A y torque del "
+             "terminal_anillo_10 a 22 lb-in.")
+    print(f"[3] Ejecutando orquestacion para la orden:\n    {orden}\n")
+    resultado = crew.kickoff(inputs={"orden": orden})
+
+    print("\n" + "=" * 60)
+    print("RESULTADO DE LA ORQUESTACION:")
+    print("=" * 60)
+    print(resultado)
+
+---
+
+[Fuente: doc_demo.txt | Pagina: s/p]
+print("[2] Construyendo Crew jerarquico...")
+    crew = construir_crew(retriever)
+
+    orden = ("Inspeccion de 100 horas del cableado del componente de avionica: "
+             "revisar empalmes, validar AWG 16 para 18 A y torque del "
+             "terminal_anillo_10 a 22 lb-in.")
+    print(f"[3] Ejecutando orquestacion para la orden:\n    {orden}\n")
+    resultado = crew.kickoff(inputs={"orden": orden})
+
+    print("\n" + "=" * 60)
+    print("RESULTADO DE LA ORQUESTACION:")
+    print("=" * 60)
+    print(resultado)[0m[32;1m[1;3m
+Invoking: `validar_parametro_tecnico` with `{'tipo': 'calibre', 'valor': 16, 'referencia': 18}`
+
+
+[0m[33;1m[1;3m[APTO] AWG 16 soporta 22.0 A para 18.0 A (margen 18.2%).[0m[32;1m[1;3m
+Invoking: `validar_parametro_tecnico` with `{'tipo': 'torque', 'valor': 22, 'referencia': 'terminal_anillo_10'}`
+
+
+[0m[33;1m[1;3m[APTO] Torque 22.0 lb-in dentro del rango [20, 25] para terminal_anillo_10.[0m[32;1m[1;3m
+Invoking: `generar_plan_mantenimiento` with `{'titulo': 'Inspección de cableado del componente de avionica', 'subtareas_priorizadas': '1. Revisar empalmes de cableado en avionica.\n2. Validar que el cable AWG 16 soporte 18 A.\n3. Confirmar el torque del terminal_anillo_10 a 22 lb-in.', 'fuente': '[Fuente: doc_demo.txt | Pagina: s/p]'}`
+
+
+[0m[38;5;200m[1;3m[OK] Plan de mantenimiento generado: planes_mantenimiento/PLAN-20260523-233026.txt
+
+=========================================
+PLAN DE MANTENIMIENTO PLAN-20260523-233026
+Taller de Avionica - LATAM Airlines
+Fecha: 2026-05-23 23:30
+=========================================
+
+ORDEN: Inspección de cableado del componente de avionica
+
+SUBTAREAS PRIORIZADAS:
+1. Revisar empalmes de cableado en avionica.
+2. Validar que el cable AWG 16 soporte 18 A.
+3. Confirmar el torque del terminal_anillo_10 a 22 lb-in.
+
+RESPALDO DOCUMENTAL:
+[Fuente: doc_demo.txt | Pagina: s/p]
+=========================================
+[0m[32;1m[1;3mHe planificado la inspección del cableado del componente de avionica. A continuación, se detalla el plan ejecutable:
+
+### PLAN DE MANTENIMIENTO
+**Taller de Avionica - LATAM Airlines**  
+**Fecha:** 2026-05-23 23:30  
+
+#### ORDEN: 
+Inspección de cableado del componente de avionica
+
+#### SUBTAREAS PRIORIZADAS:
+1. Revisar empalmes de cableado en avionica.
+2. Validar que el cable AWG 16 soporte 18 A.
+3. Confirmar el torque del terminal_anillo_10 a 22 lb-in.
+
+#### RESPALDO DOCUMENTAL:
+[Fuente: doc_demo.txt | Pagina: s/p]
+
+Este plan ha sido generado y está listo para su ejecución. Si necesitas más información o ajustes, no dudes en solicitarlo.[0m
+
+[1m> Finished chain.[0m
+
+[PLAN GENERADO]:
+He planificado la inspección del cableado del componente de avionica. A continuación, se detalla el plan ejecutable:
+
+### PLAN DE MANTENIMIENTO
+**Taller de Avionica - LATAM Airlines**  
+**Fecha:** 2026-05-23 23:30  
+
+#### ORDEN: 
+Inspección de cableado del componente de avionica
+
+#### SUBTAREAS PRIORIZADAS:
+1. Revisar empalmes de cableado en avionica.
+2. Validar que el cable AWG 16 soporte 18 A.
+3. Confirmar el torque del terminal_anillo_10 a 22 lb-in.
+
+#### RESPALDO DOCUMENTAL:
+[Fuente: doc_demo.txt | Pagina: s/p]
+
+Este plan ha sido generado y está listo para su ejecución. Si necesitas más información o ajustes, no dudes en solicitarlo.
+
+[OK] Interaccion guardada en memoria de largo plazo.

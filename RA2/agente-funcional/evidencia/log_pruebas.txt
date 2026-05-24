@@ -1,0 +1,27 @@
+/workspaces/Ingenier-a-de-Soluciones-con-Inteligencia-Artificial/RA2/agente-funcional/memoria.py:13: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/
+  return ConversationBufferWindowMemory(
+============================================================
+PRUEBAS DE COMPONENTES - AGENTE FUNCIONAL (EP2)
+============================================================
+
+[TEST] Herramienta de razonamiento (validar_parametro_tecnico)
+    [APTO] AWG 16 soporta 22.0 A para 18.0 A (margen 18.2%).
+    [NO APTO] AWG 20 soporta solo 11.0 A, insuficiente para 18.0 A. Use un calibre menor (mas grueso).
+    [APTO] Torque 22.0 lb-in dentro del rango [20, 25] para terminal_anillo_10.
+   PASS
+
+[TEST] Herramienta de escritura (generar_plan_mantenimiento)
+    Plan generado y persistido en archivo.
+   PASS
+
+[TEST] Memoria de corto plazo (ventana k=5)
+    Ventana mantiene 4 mensajes (2 turnos).
+   PASS
+
+[TEST] Memoria de largo plazo (persistente entre sesiones)
+    Persistencia OK: 2 registros tras recarga. Busqueda 'torque': 1.
+   PASS
+
+============================================================
+TODAS LAS PRUEBAS PASARON
+============================================================
