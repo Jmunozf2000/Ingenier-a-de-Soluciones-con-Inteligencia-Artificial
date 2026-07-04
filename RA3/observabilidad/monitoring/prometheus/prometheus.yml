@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # El harness expone /metrics en el host (python harness_benchmark.py --puerto 8000)
+  - job_name: "agente_avionica"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          servicio: "agente_planificador_mantenimiento"
+          entorno: "observabilidad_ra3"
+
+  # Prometheus se monitorea a si mismo (opcional)
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

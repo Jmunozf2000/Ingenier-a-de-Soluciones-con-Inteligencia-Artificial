@@ -1,0 +1,7 @@
+categoria,precision,tasa_bloqueo,latencia_media
+awg_insuficiente,0.9583,1.0,1.4564
+no_tabulado,1.0,1.0,1.6522
+nominal,0.9375,0.125,1.676
+repetido,0.8854,0.2292,1.6202
+sin_documentacion,0.9479,1.0,1.4575
+torque_fuera_rango,1.0,1.0,1.7995

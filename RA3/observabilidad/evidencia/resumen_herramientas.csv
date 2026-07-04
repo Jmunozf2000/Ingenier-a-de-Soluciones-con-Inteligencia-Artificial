@@ -1,0 +1,6 @@
+herramienta,n,media,p50,p95,maximo
+razonamiento_llm,288,0.9083,0.8476,1.6788,4.5002
+consulta_requisitos_mantenimiento,288,0.5315,0.4616,1.1781,2.4041
+generar_plan_mantenimiento,79,0.1267,0.1148,0.2061,0.6987
+validar_torque,288,0.0701,0.0604,0.1265,0.433
+validar_calibre,288,0.0657,0.062,0.1202,0.3376
