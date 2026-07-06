@@ -8,9 +8,9 @@ recolecta métricas (Prometheus), analiza la traza y las visualiza en Grafana.
 ## Contenido
 
 | Archivo | Rol |
-|---|---|---|
+|---|---|
 | `instrumentacion.py` | Métricas Prometheus + traza JSONL + recursos (psutil) |
-| `escenarios.py` | Batería de escenarios con verdad de terreno | IE1 |
+| `escenarios.py` | Batería de escenarios con verdad de terreno (IE1) |
 | `harness_benchmark.py` | Ejecuta la batería instrumentada (modos `sim` / `real`) |
 | `analisis_trazabilidad.py` | Cuellos de botella, errores y anomalías (IQR) |
 | `seguridad.py` | Redacción de secretos/PII y guardrails de entrada |
